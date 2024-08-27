@@ -1,15 +1,13 @@
-# tcob
+# telegram-downloader
 
-To install dependencies:
+> telegram-downloader is not final name of this project, and might be changed in the future.
 
-```bash
-bun install
-```
+## Installation
 
-To run:
+- `bun install` to install all required dependencies.
+- Visit [BotFather](https://t.me/BotFather) and get your token for Bot, and put it in `.env.local.example` *(don't forget to remove .example after it)*
+- `bun run src/index.ts` to launch your bot.
 
-```bash
-bun run src/index.ts
-```
+## Dependencies
 
-This project was created using `bun init` in bun v1.1.25. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+- [bun.sh](https://bun.sh)
