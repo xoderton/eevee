@@ -4,7 +4,7 @@ import type { InputMediaAudio, InputMediaPhoto, InputMediaVideo } from "telegraf
 
 import { Logger } from "tslog"
 
-import { getFiles } from "./utils"
+import { getFiles } from "@/utils"
 
 ///
 
@@ -15,8 +15,12 @@ const URL_REGEX = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0
 const logger = new Logger()
 
 const bot = new Telegraf(Bun.env.TELEGRAF_TOKEN)
-bot.start((ctx) => ctx.reply("I can download multiple links from your messages, but some of them might be unsupported, send to test it!"))
-bot.help((ctx) => ctx.reply("I can download multiple links from your messages, but some of them might be unsupported, send to test it!"))
+bot.start((ctx) => {
+  ctx.replyWithPhoto(Input.fromLocalFile("assets/ctb_banner.png"), {
+    caption: "<b>cobalt.tools</b> is new and probaly fastest way for people to download videos, photos and etc. from internet.\n\nI'm not an official addition to their website, it was made by some enthuasist to stop opening website over and over, that also helps sharing memes, videos and other \"important\" stuff to our friends!\n\nIt's pretty much easy to start using this bot, just send your links in chat with this bot, and it will respond with video <b>WITHOUT</b> any problems like paywalls, sub-to-use and other crappy unnecessary things.\n\n<a href=\"https://t.me/shckpst\">Support</a> • <a href=\"https://github.com/xoderton/telegram-downloader\">Source Code</a>",
+    parse_mode: "HTML"
+  })
+})
 
 ///
 
@@ -33,29 +37,13 @@ bot.on(message("text"), async (ctx) => {
   const audios = files.filter((url, index) =>
     url.match(/(mp3|ogg|wav)/gi) || source[index].includes("soundcloud"))
 
-  if (images.length >= 1) {
-    const mediaGroup = []
-    for (const image of images) { mediaGroup.push({ type: "photo", media: image }) }
+  const mediaGroup = []
 
-    ctx.replyWithMediaGroup(mediaGroup as unknown as InputMediaPhoto[])
-      .catch((err: Error) => logger.error(err))
-  }
+  for (const image of images) { mediaGroup.push({ type: "photo", media: image } as InputMediaPhoto) }
+  for (const video of videos) { mediaGroup.push({ type: "video", media: Input.fromURLStream(video) } as InputMediaVideo) }
+  for (const audio of audios) { mediaGroup.push({ type: "audio", media: Input.fromURLStream(audio) } as InputMediaAudio) }
 
-  if (videos.length >= 1) {
-    const mediaGroup = []
-    for (const video of videos) { mediaGroup.push({ type: "video", media: Input.fromURLStream(video) }) }
-
-    ctx.replyWithMediaGroup(mediaGroup as unknown as InputMediaVideo[])
-      .catch((err: Error) => logger.error(err))
-  }
-
-  if (audios.length >= 1) {
-    const mediaGroup = []
-    for (const audio of audios) { mediaGroup.push({ type: "audio", media: Input.fromURLStream(audio) }) }
-
-    ctx.replyWithMediaGroup(mediaGroup as unknown as InputMediaAudio[])
-      .catch((err: Error) => logger.error(err))
-  }
+  ctx.replyWithMediaGroup(mediaGroup as unknown as (InputMediaAudio[] | InputMediaPhoto[] | InputMediaVideo[]))
 })
 
 ///

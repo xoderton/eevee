@@ -3,15 +3,15 @@ export async function getFiles(urls: IterableIterator<RegExpMatchArray>) {
   const source: string[] = []
 
   for (const url of urls) {
-    const response = await fetch('https://api.cobalt.tools/api/json', {
-      method: 'POST',
+    const response = await fetch("https://api.cobalt.tools/api/json", {
+      method: "POST",
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
+        "Accept": "application/json",
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         url: url[0],
-        filenamePattern: 'pretty',
+        filenamePattern: "pretty",
       })
     })
 
