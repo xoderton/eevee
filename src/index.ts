@@ -1,6 +1,6 @@
-import { Input, Telegraf } from "telegraf"
+import { Input, Telegraf, TelegramError } from "telegraf"
 import { message } from "telegraf/filters"
-import type { InputMediaAudio, InputMediaPhoto, InputMediaVideo } from "telegraf/types"
+import type { InputFile, InputMediaAudio, InputMediaPhoto, InputMediaVideo } from "telegraf/types"
 
 import { Logger } from "tslog"
 
@@ -33,21 +33,28 @@ bot.on(message("text"), async (ctx) => {
   const images = files.filter(url =>
     url.match(/(jpg|png|webp|svg)/gi))
   const videos = files.filter((url, index) =>
-    url.match(/(mp4|webm|mkv)/gi) || (url.includes("olly.imput.net/api/stream") && !source[index].includes("soundcloud")))
+    url.match(/(mp4|webm|mkv)/gi) || (url.includes("imput.net/api/stream") && (source[index] && !source[index].includes("soundcloud"))))
   const audios = files.filter((url, index) =>
-    url.match(/(mp3|ogg|wav)/gi) || source[index].includes("soundcloud"))
+    url.match(/(mp3|ogg|wav)/gi) || (source[index] && source[index].includes("soundcloud")))
 
-  const mediaGroup = []
+  const mediaGroup: [{ type: "photo" | "video" | "audio", media: InputFile | string }?] = []
 
-  for (const image of images) { mediaGroup.push({ type: "photo", media: image } as InputMediaPhoto) }
-  for (const video of videos) { mediaGroup.push({ type: "video", media: Input.fromURLStream(video) } as InputMediaVideo) }
-  for (const audio of audios) { mediaGroup.push({ type: "audio", media: Input.fromURLStream(audio) } as InputMediaAudio) }
+  for (const image of images) { mediaGroup.push({ type: "photo", media: image }) }
+  for (const video of videos) { mediaGroup.push({ type: "video", media: Input.fromURLStream(video) }) }
+  for (const audio of audios) { mediaGroup.push({ type: "audio", media: Input.fromURLStream(audio) }) }
+
+  if (mediaGroup.length < 1) return
 
   ctx.replyWithMediaGroup(mediaGroup as unknown as (InputMediaAudio[] | InputMediaPhoto[] | InputMediaVideo[]))
+    .catch((err: TelegramError) => {
+      if (err.code == 413)
+        ctx.reply("cobalt.tools successfully extracted video from all of your links, but we couldn't send it, since Telegram limits bots up to 50MiB filesize when uploading directly to their servers, sorry!", { reply_parameters: { message_id: ctx.message.message_id } })
+    })
 })
 
 ///
 
+bot.catch((err) => { logger.error(err) })
 bot.launch()
 
 ///
