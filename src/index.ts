@@ -45,10 +45,17 @@ bot.on(message("text"), async (ctx) => {
 
   if (mediaGroup.length < 1) return
 
-  ctx.replyWithMediaGroup(mediaGroup as unknown as (InputMediaAudio[] | InputMediaPhoto[] | InputMediaVideo[]))
-    .catch((err: TelegramError) => {
+  ctx.replyWithMediaGroup(mediaGroup as unknown as (InputMediaAudio[] | InputMediaPhoto[] | InputMediaVideo[]), {
+    reply_parameters: {
+      message_id: ctx.message.message_id
+    }
+  }).catch((err: TelegramError) => {
       if (err.code == 413)
-        ctx.reply("cobalt.tools successfully extracted video from all of your links, but we couldn't send it, since Telegram limits bots up to 50MiB filesize when uploading directly to their servers, sorry!", { reply_parameters: { message_id: ctx.message.message_id } })
+        ctx.reply(`cobalt.tools successfully extracted video from all of your links, but we couldn't send it, since Telegram limits bots up to 50MiB filesize when uploading directly to their servers, sorry!`, {
+          reply_parameters: {
+            message_id: ctx.message.message_id
+          }
+        })
     })
 })
 
@@ -61,6 +68,3 @@ bot.launch()
 
 process.once("SIGINT", () => bot.stop("SIGINT"))
 process.once("SIGTERM", () => bot.stop("SIGTERM"))
-
-process.on("uncaughtException", (exception) => logger.error(exception.stack))
-process.on("unhandledRejection", () => { /* nothing! */ })
