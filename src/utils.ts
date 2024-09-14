@@ -1,4 +1,6 @@
-export async function getFiles(urls: IterableIterator<RegExpMatchArray>) {
+import type { APIResponse, FunctionResult } from "@/types"
+
+export async function getFiles(urls: IterableIterator<RegExpMatchArray>): Promise<FunctionResult> {
   const files: string[] = []
   const source: string[] = []
 
@@ -15,19 +17,17 @@ export async function getFiles(urls: IterableIterator<RegExpMatchArray>) {
       })
     })
 
-    const body = await response.json()
-
+    const body: APIResponse = await response.json()
     source.push(url[0])
 
     if (body.status == "picker")
-      body.picker.forEach((data: { url: string }) => files.push(data.url))
+      body.picker.forEach(data => files.push(data.url))
+    if (body.status.match(/(rate-limit|error)/))
+      return { files: [], source: [], error: { code: "error.api.generic" } }
 
-    if (!body.status.match(/(stream|redirect|success|picker)/gi))
-      continue
-
-    if (body.url != undefined)
+    if (body.status.match(/(redirect|stream|sucess)/gi))
       files.push(body.url)
   }
 
-  return [files, source]
+  return { files, source }
 }
